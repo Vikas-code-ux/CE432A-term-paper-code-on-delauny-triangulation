@@ -39,7 +39,6 @@ class Edge {
         // k = infinity
         else if (this.B.x - this.A.x == 0) {
             this.k = Infinity;
-            // Pomak na y-osi je undefined, ali spremam u njega pomak na x-osi
             this.l = this.A.x;
             this.type = LineType.VERTICAL;
         }
@@ -54,54 +53,50 @@ class Edge {
         this.length = Math.sqrt(Math.pow(this.B.x - this.A.x, 2) + Math.pow(this.B.y - this.A.y, 2));
     }
 
-    okomica() {
+    perpendicular_bisector() {
         // Calculate center point sx, sy
         const sx = (this.A.x + this.B.x) / 2;
         const sy = (this.A.y + this.B.y) / 2;
 
-        // Okomica
-        let okomit;
+        // perpendicular_bisector
+        let perpendicular;
 
         // HORIZONTAL LINE
         if (this.type == LineType.HORIZONTAL) {
             let A = new Point(sx, sy - this.length / 2);
             let B = new Point(sx, sy + this.length / 2);
-            okomit = new Edge(A, B);
+            perpendicular = new Edge(A, B);
         }
         // VERTICAL LINE
         else if (this.type == LineType.VERTICAL) {
             let A = new Point(sx - this.length / 2, sy);
             let B = new Point(sx + this.length / 2, sy);
-            okomit = new Edge(A, B);
+            perpendicular = new Edge(A, B);
         }
         // NORMAL LINE
         else {
-            // Obrni -k, izracunaj zatim l
-            // Izracunaj dvije tocke na tom pravcu prema jednadzbi y = kx + l
             const k2 = -1 / this.k;
             const l2 = sy - (k2 * sx);
 
-            // Prva tocka
             const x2 = sx - this.length / 2;
             const y2 = k2 * x2 + l2;
 
-            // Druga tocka
             const x3 = sx + this.length / 2;
             const y3 = k2 * x3 + l2;
 
             let A = new Point(x2, y2);
             let B = new Point(x3, y3);
-            okomit = new Edge(A, B);
+            perpendicular = new Edge(A, B);
         }
 
-        return okomit;
+        return perpendicular;
     }
 
     /**
      * 
      * @param {Edge} edge 
      */
-    sjeciste(edge) {
+    intersection(edge) {
 
         // The other edge / line
         const rb = edge;
@@ -109,8 +104,6 @@ class Edge {
         // Resulting point
         let p = new Point();
 
-        // P.S. kod vertikalne linije spremam pomak na x osi u l
-        // l je inace undefined jer je k = infinity
 
         // HORIZONTAL LINE & VERTICAL
         if (this.type == LineType.HORIZONTAL && rb.type == LineType.VERTICAL) {
@@ -144,7 +137,6 @@ class Edge {
         }
         // Both NORMAL LINES
         else if (this.type == LineType.NORMAL && rb.type == LineType.NORMAL) {
-            // Sustav dviju jednadžbi pravca
             // x = (l2 - l1) / (k1 - k2)
             // y = k1x + l1 || y = k2x + l2
             p.x = (rb.l - this.l) / (this.k - rb.k);
@@ -222,19 +214,16 @@ class TriangleMesh {
         const circumCenter = this.CircumcircleCenterPoint();
         const radius = this.CircumcircleRadius();
 
-        // Ako je udaljenost od tocke i sredista opisane kruznice veća od radijusa onda je tocka izvan kruznice
         return Math.sqrt(Math.pow(point.x - circumCenter.x, 2) + Math.pow(point.y - circumCenter.y, 2)) <= radius;
     }
 
-    // Dobije se sjecistem okomica dviju stranica ili svih triju stranica
     CircumcircleCenterPoint() {
-        const okomica1 = this.a.okomica();
-        const okomica2 = this.b.okomica();
+        const perpendicular_bisector1 = this.a.perpendicular_bisector();
+        const perpendicular_bisector2 = this.b.perpendicular_bisector();
 
-        return okomica1.sjeciste(okomica2);
+        return perpendicular_bisector1.intersection(perpendicular_bisector2);
     }
 
-    // Formula za radius opisane kruznice trokuta
     CircumcircleRadius() {
         const a = this.a.length;
         const b = this.b.length;
